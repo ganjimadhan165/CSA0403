@@ -1,0 +1,35 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+
+int main() {
+    pid_t pid, ppid;
+
+    // Create a new process using fork()
+    pid = fork();
+
+    if (pid < 0) {
+        // Error in creating a new process
+        perror("fork failed");
+        return 1;
+    }
+
+    // If fork() returns 0, we're in the child process
+    if (pid == 0) {
+        ppid = getppid(); // Parent process ID
+        pid = getpid();   // Child process ID
+        printf("Child Process:\n");
+        printf("Process ID (PID) of Child: %d\n", pid);
+        printf("Parent Process ID (PPID) of Child: %d\n", ppid);
+    }
+    // If fork() returns a positive value, we're in the parent process
+    else {
+        ppid = getppid(); // Parent process ID (still same)
+        pid = getpid();   // Parent process ID
+        printf("Parent Process:\n");
+        printf("Process ID (PID) of Parent: %d\n", pid);
+        printf("Parent Process ID (PPID) of Parent: %d\n", ppid);
+    }
+
+    return 0;
+}
