@@ -1,0 +1,45 @@
+Menu:
+1. Create File
+2. List Files
+3. Delete File
+4. Exit
+Enter your choice: 1
+Enter the filename to create: file1
+File 'file1' created successfully.
+
+Menu:
+1. Create File
+2. List Files
+3. Delete File
+4. Exit
+Enter your choice: 1
+Enter the filename to create: file2
+File 'file2' created successfully.
+
+Menu:
+1. Create File
+2. List Files
+3. Delete File
+4. Exit
+Enter your choice: 2
+Files in the directory:
+- file2
+- file1
+
+Menu:
+1. Create File
+2. List Files
+3. Delete File
+4. Exit
+Enter your choice: 3
+Enter the filename to delete: file1
+File 'file1' deleted successfully.
+
+Menu:
+1. Create File
+2. List Files
+3. Delete File
+4. Exit
+Enter your choice: 2
+Files in the directory:
+- file2
