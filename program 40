@@ -1,0 +1,83 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <pwd.h>
+#include <grp.h>
+
+void display_permissions(mode_t mode) {
+    // Display read, write, execute permissions for owner, group, and others
+    printf("Permissions: ");
+    
+    // Owner Permissions
+    printf("%c", (mode & S_IRUSR) ? 'r' : '-');
+    printf("%c", (mode & S_IWUSR) ? 'w' : '-');
+    printf("%c ", (mode & S_IXUSR) ? 'x' : '-');
+    
+    // Group Permissions
+    printf("%c", (mode & S_IRGRP) ? 'r' : '-');
+    printf("%c", (mode & S_IWGRP) ? 'w' : '-');
+    printf("%c ", (mode & S_IXGRP) ? 'x' : '-');
+    
+    // Others Permissions
+    printf("%c", (mode & S_IROTH) ? 'r' : '-');
+    printf("%c", (mode & S_IWOTH) ? 'w' : '-');
+    printf("%c\n", (mode & S_IXOTH) ? 'x' : '-');
+}
+
+int main() {
+    struct stat fileStat;
+    char filename[100];
+    struct passwd *pw;
+    struct group *gr;
+    uid_t userID;
+    gid_t groupID;
+
+    // Get filename from user
+    printf("Enter the filename: ");
+    scanf("%s", filename);
+    
+    // Get file status
+    if (stat(filename, &fileStat) < 0) {
+        perror("Error reading file stats");
+        return 1;
+    }
+
+    // Display file permissions
+    display_permissions(fileStat.st_mode);
+
+    // Get the owner of the file
+    userID = fileStat.st_uid;
+    pw = getpwuid(userID);
+    printf("Owner: %s\n", pw->pw_name);
+
+    // Get the group of the file
+    groupID = fileStat.st_gid;
+    gr = getgrgid(groupID);
+    printf("Group: %s\n", gr->gr_name);
+
+    // Display file type
+    if (S_ISDIR(fileStat.st_mode)) {
+        printf("File is a Directory.\n");
+    } else if (S_ISREG(fileStat.st_mode)) {
+        printf("File is a Regular File.\n");
+    } else if (S_ISLNK(fileStat.st_mode)) {
+        printf("File is a Symbolic Link.\n");
+    } else {
+        printf("File type: Unknown.\n");
+    }
+
+    // Display the file size
+    printf("Size of the file: %ld bytes\n", fileStat.st_size);
+    
+    // Display last access time
+    printf("Last access time: %s", ctime(&fileStat.st_atime));
+    
+    // Display last modification time
+    printf("Last modification time: %s", ctime(&fileStat.st_mtime));
+    
+    // Display last status change time
+    printf("Last status change time: %s", ctime(&fileStat.st_ctime));
+
+    return 0;
+}
