@@ -1,0 +1,127 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_BLOCKS 100
+#define MAX_FILES 10
+#define MAX_FILENAME 20
+#define MAX_FILE_BLOCKS 10
+
+typedef struct {
+    char name[MAX_FILENAME];
+    int indexBlock;
+    int blockCount;
+    int blocks[MAX_FILE_BLOCKS];
+} File;
+
+int disk[MAX_BLOCKS];  // 0: free, 1: occupied
+File files[MAX_FILES];
+int fileCount = 0;
+
+int allocateBlock() {
+    for (int i = 0; i < MAX_BLOCKS; i++) {
+        if (disk[i] == 0) {
+            disk[i] = 1;
+            return i;
+        }
+    }
+    return -1;  // No free block
+}
+
+void createFile() {
+    if (fileCount >= MAX_FILES) {
+        printf("Max file limit reached.\n");
+        return;
+    }
+
+    File newFile;
+    printf("Enter file name: ");
+    scanf("%s", newFile.name);
+    printf("Enter number of blocks needed: ");
+    scanf("%d", &newFile.blockCount);
+
+    if (newFile.blockCount > MAX_FILE_BLOCKS) {
+        printf("Maximum %d blocks per file allowed.\n", MAX_FILE_BLOCKS);
+        return;
+    }
+
+    // Allocate index block
+    newFile.indexBlock = allocateBlock();
+    if (newFile.indexBlock == -1) {
+        printf("Failed to allocate index block.\n");
+        return;
+    }
+
+    // Allocate data blocks
+    for (int i = 0; i < newFile.blockCount; i++) {
+        int b = allocateBlock();
+        if (b == -1) {
+            printf("Not enough space for all blocks. Rolling back.\n");
+            disk[newFile.indexBlock] = 0;
+            for (int j = 0; j < i; j++)
+                disk[newFile.blocks[j]] = 0;
+            return;
+        }
+        newFile.blocks[i] = b;
+    }
+
+    // Add file to system
+    files[fileCount++] = newFile;
+
+    printf("File '%s' created. Index block: %d\n", newFile.name, newFile.indexBlock);
+    printf("Data blocks: ");
+    for (int i = 0; i < newFile.blockCount; i++) {
+        printf("%d ", newFile.blocks[i]);
+    }
+    printf("\n");
+}
+
+void displayFiles() {
+    printf("\nStored Files (Indexed Allocation):\n");
+    printf("Filename\tIndexBlock\tBlocks\n");
+    for (int i = 0; i < fileCount; i++) {
+        printf("%s\t\t%d\t\t", files[i].name, files[i].indexBlock);
+        for (int j = 0; j < files[i].blockCount; j++) {
+            printf("%d ", files[i].blocks[j]);
+        }
+        printf("\n");
+    }
+}
+
+void accessFile() {
+    char name[MAX_FILENAME];
+    printf("Enter file name to access: ");
+    scanf("%s", name);
+
+    for (int i = 0; i < fileCount; i++) {
+        if (strcmp(files[i].name, name) == 0) {
+            printf("Accessing file '%s':\n", name);
+            printf("Index Block: %d\n", files[i].indexBlock);
+            for (int j = 0; j < files[i].blockCount; j++) {
+                printf("Reading block %d...\n", files[i].blocks[j]);
+            }
+            return;
+        }
+    }
+    printf("File not found.\n");
+}
+
+int main() {
+    int choice;
+
+    while (1) {
+        printf("\n--- Indexed File Allocation ---\n");
+        printf("1. Create File\n2. Display Files\n3. Access File\n4. Exit\nEnter choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1: createFile(); break;
+            case 2: displayFiles(); break;
+            case 3: accessFile(); break;
+            case 4: exit(0);
+            default: printf("Invalid choice.\n");
+        }
+    }
+
+    return 0;
+}
