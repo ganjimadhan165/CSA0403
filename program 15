@@ -1,0 +1,226 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Structure for files in each subdirectory
+struct File {
+    char name[50];
+    struct File *next;
+};
+
+// Structure for subdirectories in the main directory
+struct SubDirectory {
+    char name[50];
+    struct File *files;  // Linked list of files in this subdirectory
+    struct SubDirectory *next;
+};
+
+// Function to create a file in a subdirectory
+void create_file(struct SubDirectory *subdir, const char *filename) {
+    struct File *new_file = (struct File *)malloc(sizeof(struct File));
+    if (!new_file) {
+        printf("Memory allocation failed for file!\n");
+        return;
+    }
+    strcpy(new_file->name, filename);
+    new_file->next = subdir->files;
+    subdir->files = new_file;
+    printf("File '%s' created successfully in subdirectory '%s'.\n", filename, subdir->name);
+}
+
+// Function to list all files in a subdirectory
+void list_files(struct SubDirectory *subdir) {
+    if (!subdir->files) {
+        printf("No files in subdirectory '%s'.\n", subdir->name);
+        return;
+    }
+    printf("Files in subdirectory '%s':\n", subdir->name);
+    struct File *current = subdir->files;
+    while (current) {
+        printf("- %s\n", current->name);
+        current = current->next;
+    }
+}
+
+// Function to delete a file from a subdirectory
+void delete_file(struct SubDirectory *subdir, const char *filename) {
+    struct File *current = subdir->files;
+    struct File *previous = NULL;
+
+    while (current && strcmp(current->name, filename) != 0) {
+        previous = current;
+        current = current->next;
+    }
+
+    if (current == NULL) {
+        printf("File '%s' not found in subdirectory '%s'.\n", filename, subdir->name);
+        return;
+    }
+
+    if (previous == NULL) { // File to delete is the first file in the list
+        subdir->files = current->next;
+    } else {
+        previous->next = current->next;
+    }
+
+    free(current);
+    printf("File '%s' deleted successfully from subdirectory '%s'.\n", filename, subdir->name);
+}
+
+// Function to create a subdirectory in the main directory
+void create_subdirectory(struct SubDirectory **main_dir, const char *subdir_name) {
+    struct SubDirectory *new_subdir = (struct SubDirectory *)malloc(sizeof(struct SubDirectory));
+    if (!new_subdir) {
+        printf("Memory allocation failed for subdirectory!\n");
+        return;
+    }
+    strcpy(new_subdir->name, subdir_name);
+    new_subdir->files = NULL; // No files initially
+    new_subdir->next = *main_dir;
+    *main_dir = new_subdir;
+    printf("Subdirectory '%s' created successfully.\n", subdir_name);
+}
+
+// Function to list all subdirectories
+void list_subdirectories(struct SubDirectory *main_dir) {
+    if (!main_dir) {
+        printf("No subdirectories in the main directory.\n");
+        return;
+    }
+
+    printf("Subdirectories in the main directory:\n");
+    struct SubDirectory *current = main_dir;
+    while (current) {
+        printf("- %s\n", current->name);
+        current = current->next;
+    }
+}
+
+// Function to delete a subdirectory
+void delete_subdirectory(struct SubDirectory **main_dir, const char *subdir_name) {
+    struct SubDirectory *current = *main_dir;
+    struct SubDirectory *previous = NULL;
+
+    while (current && strcmp(current->name, subdir_name) != 0) {
+        previous = current;
+        current = current->next;
+    }
+
+    if (current == NULL) {
+        printf("Subdirectory '%s' not found.\n", subdir_name);
+        return;
+    }
+
+    // Delete all files in the subdirectory
+    struct File *file_current = current->files;
+    while (file_current) {
+        struct File *temp = file_current;
+        file_current = file_current->next;
+        free(temp);
+    }
+
+    if (previous == NULL) {
+        *main_dir = current->next;
+    } else {
+        previous->next = current->next;
+    }
+
+    free(current);
+    printf("Subdirectory '%s' and all its files deleted successfully.\n", subdir_name);
+}
+
+int main() {
+    struct SubDirectory *main_dir = NULL;  // Main directory (linked list of subdirectories)
+    int choice;
+    char subdir_name[50], filename[50];
+
+    while (1) {
+        printf("\nMenu:\n");
+        printf("1. Create Subdirectory\n");
+        printf("2. List Subdirectories\n");
+        printf("3. Delete Subdirectory\n");
+        printf("4. Create File in Subdirectory\n");
+        printf("5. List Files in Subdirectory\n");
+        printf("6. Delete File from Subdirectory\n");
+        printf("7. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("Enter the name of the subdirectory to create: ");
+                scanf("%s", subdir_name);
+                create_subdirectory(&main_dir, subdir_name);
+                break;
+            case 2:
+                list_subdirectories(main_dir);
+                break;
+            case 3:
+                printf("Enter the name of the subdirectory to delete: ");
+                scanf("%s", subdir_name);
+                delete_subdirectory(&main_dir, subdir_name);
+                break;
+            case 4:
+                printf("Enter the name of the subdirectory to create a file in: ");
+                scanf("%s", subdir_name);
+                struct SubDirectory *subdir = main_dir;
+                while (subdir && strcmp(subdir->name, subdir_name) != 0) {
+                    subdir = subdir->next;
+                }
+                if (subdir) {
+                    printf("Enter the filename to create: ");
+                    scanf("%s", filename);
+                    create_file(subdir, filename);
+                } else {
+                    printf("Subdirectory '%s' not found.\n", subdir_name);
+                }
+                break;
+            case 5:
+                printf("Enter the name of the subdirectory to list files: ");
+                scanf("%s", subdir_name);
+                subdir = main_dir;
+                while (subdir && strcmp(subdir->name, subdir_name) != 0) {
+                    subdir = subdir->next;
+                }
+                if (subdir) {
+                    list_files(subdir);
+                } else {
+                    printf("Subdirectory '%s' not found.\n", subdir_name);
+                }
+                break;
+            case 6:
+                printf("Enter the name of the subdirectory to delete a file from: ");
+                scanf("%s", subdir_name);
+                subdir = main_dir;
+                while (subdir && strcmp(subdir->name, subdir_name) != 0) {
+                    subdir = subdir->next;
+                }
+                if (subdir) {
+                    printf("Enter the filename to delete: ");
+                    scanf("%s", filename);
+                    delete_file(subdir, filename);
+                } else {
+                    printf("Subdirectory '%s' not found.\n", subdir_name);
+                }
+                break;
+            case 7:
+                printf("Exiting the program.\n");
+                // Free the allocated memory before exiting
+                while (main_dir != NULL) {
+                    struct SubDirectory *temp_subdir = main_dir;
+                    while (temp_subdir->files != NULL) {
+                        struct File *temp_file = temp_subdir->files;
+                        temp_subdir->files = temp_file->next;
+                        free(temp_file);
+                    }
+                    main_dir = temp_subdir->next;
+                    free(temp_subdir);
+                }
+                exit(0);
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    }
+    
+    return 0;
+}
