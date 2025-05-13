@@ -1,0 +1,139 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_BLOCKS 100
+#define MAX_FILENAME 20
+#define MAX_FILES 10
+
+typedef struct Block {
+    int blockNum;
+    struct Block *next;
+} Block;
+
+typedef struct {
+    char name[MAX_FILENAME];
+    Block *start;
+    Block *end;
+} File;
+
+int disk[MAX_BLOCKS];  // 0 = free, 1 = used
+File files[MAX_FILES];
+int fileCount = 0;
+
+// Allocate a single free block
+Block* allocateBlock() {
+    for (int i = 0; i < MAX_BLOCKS; i++) {
+        if (disk[i] == 0) {
+            disk[i] = 1;
+
+            Block *newBlock = (Block*)malloc(sizeof(Block));
+            newBlock->blockNum = i;
+            newBlock->next = NULL;
+            return newBlock;
+        }
+    }
+    return NULL; // No free block
+}
+
+void createFile() {
+    if (fileCount >= MAX_FILES) {
+        printf("Max file limit reached.\n");
+        return;
+    }
+
+    File newFile;
+    printf("Enter file name: ");
+    scanf("%s", newFile.name);
+
+    int blockCount;
+    printf("Enter number of blocks needed: ");
+    scanf("%d", &blockCount);
+
+    Block *head = NULL, *tail = NULL;
+
+    for (int i = 0; i < blockCount; i++) {
+        Block *b = allocateBlock();
+        if (b == NULL) {
+            printf("Insufficient space. Rolling back file creation.\n");
+
+            // Rollback previously allocated blocks
+            Block *temp = head;
+            while (temp) {
+                disk[temp->blockNum] = 0;
+                Block *toFree = temp;
+                temp = temp->next;
+                free(toFree);
+            }
+            return;
+        }
+
+        if (head == NULL) {
+            head = tail = b;
+        } else {
+            tail->next = b;
+            tail = b;
+        }
+    }
+
+    newFile.start = head;
+    newFile.end = tail;
+    files[fileCount++] = newFile;
+
+    printf("File '%s' created. Start block: %d, End block: %d\n",
+           newFile.name, newFile.start->blockNum, newFile.end->blockNum);
+}
+
+void displayFiles() {
+    printf("\nStored Files (Linked Allocation):\n");
+    for (int i = 0; i < fileCount; i++) {
+        printf("File: %s\n", files[i].name);
+        printf("Blocks: ");
+        Block *temp = files[i].start;
+        while (temp) {
+            printf("%d -> ", temp->blockNum);
+            temp = temp->next;
+        }
+        printf("NULL\n");
+    }
+}
+
+void accessFile() {
+    char name[MAX_FILENAME];
+    printf("Enter file name to access: ");
+    scanf("%s", name);
+
+    for (int i = 0; i < fileCount; i++) {
+        if (strcmp(files[i].name, name) == 0) {
+            printf("Accessing file '%s' blocks:\n", name);
+            Block *temp = files[i].start;
+            while (temp) {
+                printf("Reading block %d...\n", temp->blockNum);
+                temp = temp->next;
+            }
+            return;
+        }
+    }
+
+    printf("File not found.\n");
+}
+
+int main() {
+    int choice;
+
+    while (1) {
+        printf("\n--- Linked File Allocation ---\n");
+        printf("1. Create File\n2. Display Files\n3. Access File\n4. Exit\nEnter choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1: createFile(); break;
+            case 2: displayFiles(); break;
+            case 3: accessFile(); break;
+            case 4: exit(0);
+            default: printf("Invalid choice.\n");
+        }
+    }
+
+    return 0;
+}
