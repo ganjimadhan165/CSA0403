@@ -1,0 +1,147 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// 1. Contiguous Memory Allocation
+void contiguous_allocation() {
+    int size;
+    printf("Enter size of array for contiguous allocation: ");
+    scanf("%d", &size);
+
+    int *arr = (int *)malloc(size * sizeof(int));  // Allocating contiguous memory
+    if (arr == NULL) {
+        printf("Memory allocation failed!\n");
+        return;
+    }
+
+    printf("Enter %d elements:\n", size);
+    for (int i = 0; i < size; i++) {
+        scanf("%d", &arr[i]);
+    }
+
+    printf("Array elements:\n");
+    for (int i = 0; i < size; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+
+    free(arr);  // Free the allocated memory
+}
+
+// 2. Non-contiguous Memory Allocation (Using Linked List)
+struct Node {
+    int data;
+    struct Node *next;
+};
+
+void non_contiguous_allocation() {
+    int n;
+    printf("Enter number of nodes for non-contiguous allocation: ");
+    scanf("%d", &n);
+
+    struct Node *head = NULL, *temp, *current;
+    for (int i = 0; i < n; i++) {
+        temp = (struct Node *)malloc(sizeof(struct Node));  // Allocate memory non-contiguously
+        if (temp == NULL) {
+            printf("Memory allocation failed!\n");
+            return;
+        }
+        printf("Enter data for node %d: ", i + 1);
+        scanf("%d", &temp->data);
+        temp->next = NULL;
+
+        if (head == NULL) {
+            head = temp;  // Set the head pointer for the first node
+        } else {
+            current->next = temp;  // Link the nodes
+        }
+        current = temp;  // Move the current pointer to the last node
+    }
+
+    // Display the linked list
+    printf("Linked list elements: ");
+    current = head;
+    while (current != NULL) {
+        printf("%d ", current->data);
+        current = current->next;
+    }
+    printf("\n");
+
+    // Free the allocated memory for the linked list
+    current = head;
+    while (current != NULL) {
+        temp = current;
+        current = current->next;
+        free(temp);
+    }
+}
+
+// 3. Dynamic Memory Allocation
+void dynamic_allocation() {
+    int n;
+    printf("Enter number of elements for dynamic allocation: ");
+    scanf("%d", &n);
+
+    int *arr = (int *)malloc(n * sizeof(int));  // Dynamic memory allocation using malloc
+    if (arr == NULL) {
+        printf("Memory allocation failed!\n");
+        return;
+    }
+
+    printf("Enter %d elements:\n", n);
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &arr[i]);
+    }
+
+    printf("Array elements after allocation:\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+
+    // Reallocating memory (doubles the size)
+    arr = (int *)realloc(arr, 2 * n * sizeof(int));  // Reallocating with larger memory
+    if (arr == NULL) {
+        printf("Reallocation failed!\n");
+        return;
+    }
+
+    printf("Array after reallocation:\n");
+    for (int i = 0; i < 2 * n; i++) {
+        printf("%d ", arr[i]);  // Display the new array with reallocated space
+    }
+    printf("\n");
+
+    free(arr);  // Free the dynamically allocated memory
+}
+
+int main() {
+    int choice;
+
+    while (1) {
+        printf("\nChoose a memory allocation strategy:\n");
+        printf("1. Contiguous Memory Allocation\n");
+        printf("2. Non-contiguous Memory Allocation (Linked List)\n");
+        printf("3. Dynamic Memory Allocation (malloc, realloc)\n");
+        printf("4. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                contiguous_allocation();
+                break;
+            case 2:
+                non_contiguous_allocation();
+                break;
+            case 3:
+                dynamic_allocation();
+                break;
+            case 4:
+                exit(0);
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    }
+
+    return 0;
+}
