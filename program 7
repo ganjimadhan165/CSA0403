@@ -1,0 +1,79 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct {
+    int process_id;      // Process ID
+    int burst_time;      // CPU Burst Time
+    int arrival_time;    // Arrival Time
+    int waiting_time;    // Waiting Time
+    int turnaround_time; // Turnaround Time
+    int completion_time; // Completion Time
+} Process;
+
+// Function to compare two processes based on burst time
+int compare_burst_time(const void* a, const void* b) {
+    Process* processA = (Process*)a;
+    Process* processB = (Process*)b;
+    return processA->burst_time - processB->burst_time; // Ascending order of burst time
+}
+
+void calculate_sjf(Process processes[], int n) {
+    int total_waiting_time = 0, total_turnaround_time = 0;
+
+    // Sort processes by burst time
+    qsort(processes, n, sizeof(Process), compare_burst_time);
+
+    // Calculate waiting time and turnaround time for each process
+    processes[0].waiting_time = 0;  // First process does not wait
+    processes[0].completion_time = processes[0].burst_time;
+
+    for (int i = 1; i < n; i++) {
+        processes[i].waiting_time = processes[i - 1].completion_time - processes[i].arrival_time;
+        if (processes[i].waiting_time < 0) {
+            processes[i].waiting_time = 0; // If process arrives later, it doesn't wait
+        }
+        processes[i].turnaround_time = processes[i].waiting_time + processes[i].burst_time;
+        processes[i].completion_time = processes[i].waiting_time + processes[i].burst_time + processes[i - 1].completion_time;
+
+        total_waiting_time += processes[i].waiting_time;
+        total_turnaround_time += processes[i].turnaround_time;
+    }
+
+    // Calculate average waiting time and average turnaround time
+    float avg_waiting_time = (float)total_waiting_time / n;
+    float avg_turnaround_time = (float)total_turnaround_time / n;
+
+    // Display results
+    printf("\nProcess\tBurst Time\tArrival Time\tCompletion Time\tTurnaround Time\tWaiting Time\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d\t%d\t\t%d\t\t%d\t\t%d\t\t%d\n", processes[i].process_id, processes[i].burst_time,
+               processes[i].arrival_time, processes[i].completion_time, processes[i].turnaround_time, processes[i].waiting_time);
+    }
+
+    printf("\nAverage Waiting Time: %.2f", avg_waiting_time);
+    printf("\nAverage Turnaround Time: %.2f\n", avg_turnaround_time);
+}
+
+int main() {
+    int n;
+
+    // Input number of processes
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    Process processes[n];
+
+    // Input burst time and arrival time for each process
+    for (int i = 0; i < n; i++) {
+        processes[i].process_id = i + 1;
+        printf("\nEnter burst time for process %d: ", i + 1);
+        scanf("%d", &processes[i].burst_time);
+        printf("Enter arrival time for process %d: ", i + 1);
+        scanf("%d", &processes[i].arrival_time);
+    }
+
+    // Calculate and display SJF Scheduling results
+    calculate_sjf(processes, n);
+
+    return 0;
+}
