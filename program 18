@@ -1,0 +1,83 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <unistd.h>
+
+#define BUFFER_SIZE 5  // Size of the buffer
+
+// Shared buffer
+int buffer[BUFFER_SIZE];
+int in = 0;  // Index for the next available spot for the producer
+int out = 0; // Index for the next available item for the consumer
+
+// Semaphores
+sem_t empty;   // Semaphore to count the empty slots in the buffer
+sem_t full;    // Semaphore to count the full slots in the buffer
+sem_t mutex;   // Mutex for mutual exclusion (to ensure only one thread accesses the buffer at a time)
+
+// Producer function
+void* producer(void* param) {
+    int item;
+    while (1) {
+        // Produce an item (a random integer for demonstration)
+        item = rand() % 100;
+        sem_wait(&empty);   // Decrement the empty slots count
+        sem_wait(&mutex);   // Lock the buffer for mutual exclusion
+
+        // Add the item to the buffer
+        buffer[in] = item;
+        printf("Producer produced: %d at index %d\n", item, in);
+
+        // Update the index and signal full
+        in = (in + 1) % BUFFER_SIZE;
+        sem_post(&mutex);   // Unlock the buffer
+        sem_post(&full);    // Increment the full slots count
+
+        sleep(1); // Simulate some time to produce the item
+    }
+}
+
+// Consumer function
+void* consumer(void* param) {
+    int item;
+    while (1) {
+        sem_wait(&full);    // Decrement the full slots count
+        sem_wait(&mutex);   // Lock the buffer for mutual exclusion
+
+        // Consume an item from the buffer
+        item = buffer[out];
+        printf("Consumer consumed: %d from index %d\n", item, out);
+
+        // Update the index and signal empty
+        out = (out + 1) % BUFFER_SIZE;
+        sem_post(&mutex);   // Unlock the buffer
+        sem_post(&empty);   // Increment the empty slots count
+
+        sleep(1); // Simulate some time to consume the item
+    }
+}
+
+int main() {
+    pthread_t prod_tid, cons_tid;
+
+    // Initialize the semaphores
+    sem_init(&empty, 0, BUFFER_SIZE);  // Initially, the buffer has empty slots
+    sem_init(&full, 0, 0);  // Initially, the buffer has no full slots
+    sem_init(&mutex, 0, 1); // Mutex for mutual exclusion, initialized to 1
+
+    // Create producer and consumer threads
+    pthread_create(&prod_tid, NULL, producer, NULL);
+    pthread_create(&cons_tid, NULL, consumer, NULL);
+
+    // Wait for threads to finish (this won't happen because the loops are infinite)
+    pthread_join(prod_tid, NULL);
+    pthread_join(cons_tid, NULL);
+
+    // Destroy the semaphores
+    sem_destroy(&empty);
+    sem_destroy(&full);
+    sem_destroy(&mutex);
+
+    return 0;
+}
