@@ -1,0 +1,43 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <string.h>
+
+#define MSG_KEY 1234  // Message Queue Key
+
+// Message structure
+struct message {
+    long msg_type;   // Message type
+    char msg_text[100]; // Message content
+};
+
+int main() {
+    key_t key;
+    int msgid;
+    struct message msg;
+
+    // Create or access the message queue
+    key = MSG_KEY;  // Use a constant key for simplicity
+    msgid = msgget(key, 0666 | IPC_CREAT);
+    if (msgid == -1) {
+        perror("msgget failed");
+        exit(1);
+    }
+
+    // Prepare the message to send
+    msg.msg_type = 1;  // Message type (any positive number)
+    printf("Enter a message to send: ");
+    fgets(msg.msg_text, sizeof(msg.msg_text), stdin);
+
+    // Send the message to the message queue
+    if (msgsnd(msgid, &msg, sizeof(msg.msg_text), 0) == -1) {
+        perror("msgsnd failed");
+        exit(1);
+    }
+
+    printf("Message sent: %s", msg.msg_text);
+
+    return 0;
+}
+
