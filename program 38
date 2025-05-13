@@ -1,0 +1,112 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+void scanDiskScheduling(int request[], int n, int head, int direction, int totalCylinders) {
+    int left[n], right[n];
+    int leftCount = 0, rightCount = 0;
+    int totalMovement = 0;
+    
+    // Divide requests into left and right of the initial head position
+    for (int i = 0; i < n; i++) {
+        if (request[i] < head) {
+            left[leftCount++] = request[i];
+        } else {
+            right[rightCount++] = request[i];
+        }
+    }
+
+    // Sort both left and right arrays
+    for (int i = 0; i < leftCount - 1; i++) {
+        for (int j = i + 1; j < leftCount; j++) {
+            if (left[i] < left[j]) {
+                int temp = left[i];
+                left[i] = left[j];
+                left[j] = temp;
+            }
+        }
+    }
+
+    for (int i = 0; i < rightCount - 1; i++) {
+        for (int j = i + 1; j < rightCount; j++) {
+            if (right[i] > right[j]) {
+                int temp = right[i];
+                right[i] = right[j];
+                right[j] = temp;
+            }
+        }
+    }
+
+    printf("SCAN Disk Scheduling:\n");
+
+    // If the direction is to the right (1), first process the right side
+    if (direction == 1) {
+        // Move to the right, serve requests, and move to the farthest end
+        printf("Head movement order: %d", head);
+        for (int i = 0; i < rightCount; i++) {
+            totalMovement += abs(head - right[i]);
+            head = right[i];
+            printf(" -> %d", head);
+        }
+        totalMovement += abs(head - totalCylinders);  // Move to the farthest right
+        head = totalCylinders;
+        printf(" -> %d", head);
+
+        // Reverse the direction to the left
+        for (int i = leftCount - 1; i >= 0; i--) {
+            totalMovement += abs(head - left[i]);
+            head = left[i];
+            printf(" -> %d", head);
+        }
+    }
+    // If the direction is to the left (0), first process the left side
+    else {
+        // Move to the left, serve requests, and move to the farthest left
+        printf("Head movement order: %d", head);
+        for (int i = leftCount - 1; i >= 0; i--) {
+            totalMovement += abs(head - left[i]);
+            head = left[i];
+            printf(" -> %d", head);
+        }
+        totalMovement += abs(head - 0);  // Move to the farthest left
+        head = 0;
+        printf(" -> %d", head);
+
+        // Reverse the direction to the right
+        for (int i = 0; i < rightCount; i++) {
+            totalMovement += abs(head - right[i]);
+            head = right[i];
+            printf(" -> %d", head);
+        }
+    }
+
+    printf("\nTotal head movement: %d cylinders\n", totalMovement);
+}
+
+int main() {
+    int n, head, direction, totalCylinders;
+
+    // Taking input
+    printf("Enter the number of disk I/O requests: ");
+    scanf("%d", &n);
+
+    int request[n];
+
+    printf("Enter the disk I/O request queue (cylinder numbers):\n");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &request[i]);
+    }
+
+    printf("Enter the initial position of the disk head: ");
+    scanf("%d", &head);
+
+    printf("Enter the direction of movement (1 for right, 0 for left): ");
+    scanf("%d", &direction);
+
+    printf("Enter the total number of cylinders: ");
+    scanf("%d", &totalCylinders);
+
+    // Call SCAN Disk Scheduling function
+    scanDiskScheduling(request, n, head, direction, totalCylinders);
+
+    return 0;
+}
