@@ -1,0 +1,75 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int mutex = 1;       // Binary semaphore for mutual exclusion
+int full = 0;        // Number of full slots
+int empty = 10;      // Number of empty slots (buffer size)
+int buffer[10];      // Shared buffer
+int in = 0, out = 0; // Buffer index
+
+// Wait (P) operation
+int wait(int s) {
+    return (--s);
+}
+
+// Signal (V) operation
+int signal(int s) {
+    return (++s);
+}
+
+// Producer function
+void producer() {
+    if (mutex == 1 && empty != 0) {
+        mutex = wait(mutex);
+        full = signal(full);
+        empty = wait(empty);
+
+        buffer[in] = rand() % 100; // Produce a random item
+        printf("Produced: %d at buffer[%d]\n", buffer[in], in);
+        in = (in + 1) % 10;
+
+        mutex = signal(mutex);
+    } else {
+        printf("Buffer is full! Producer is waiting...\n");
+    }
+}
+
+// Consumer function
+void consumer() {
+    if (mutex == 1 && full != 0) {
+        mutex = wait(mutex);
+        full = wait(full);
+        empty = signal(empty);
+
+        printf("Consumed: %d from buffer[%d]\n", buffer[out], out);
+        out = (out + 1) % 10;
+
+        mutex = signal(mutex);
+    } else {
+        printf("Buffer is empty! Consumer is waiting...\n");
+    }
+}
+
+int main() {
+    int choice;
+
+    while (1) {
+        printf("\n1. Produce\n2. Consume\n3. Exit\nEnter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                producer();
+                break;
+            case 2:
+                consumer();
+                break;
+            case 3:
+                exit(0);
+            default:
+                printf("Invalid choice.\n");
+        }
+    }
+
+    return 0;
+}
