@@ -1,0 +1,109 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_BLOCKS 100
+#define MAX_FILES 10
+#define MAX_FILENAME 20
+
+typedef struct {
+    char name[MAX_FILENAME];
+    int startBlock;
+    int length;
+} File;
+
+int disk[MAX_BLOCKS];       // Simulated disk blocks (0 = free, 1 = used)
+File files[MAX_FILES];      // Array to store file metadata
+int fileCount = 0;
+
+void createFile() {
+    char name[MAX_FILENAME];
+    int length, i, j, found = 0;
+
+    printf("Enter file name: ");
+    scanf("%s", name);
+    printf("Enter file size (number of blocks): ");
+    scanf("%d", &length);
+
+    // Search for a large enough contiguous space
+    for (i = 0; i <= MAX_BLOCKS - length; i++) {
+        found = 1;
+        for (j = i; j < i + length; j++) {
+            if (disk[j] == 1) {
+                found = 0;
+                break;
+            }
+        }
+
+        if (found)
+            break;
+    }
+
+    if (!found) {
+        printf("Error: Not enough contiguous space to store the file.\n");
+        return;
+    }
+
+    // Allocate space
+    for (j = i; j < i + length; j++)
+        disk[j] = 1;
+
+    strcpy(files[fileCount].name, name);
+    files[fileCount].startBlock = i;
+    files[fileCount].length = length;
+    fileCount++;
+
+    printf("File '%s' created from block %d to %d.\n", name, i, i + length - 1);
+}
+
+void displayFiles() {
+    int i;
+    printf("\nStored Files:\n");
+    printf("Filename\tStart\tLength\tBlocks\n");
+    for (i = 0; i < fileCount; i++) {
+        printf("%s\t\t%d\t%d\t", files[i].name, files[i].startBlock, files[i].length);
+        for (int j = 0; j < files[i].length; j++) {
+            printf("%d ", files[i].startBlock + j);
+        }
+        printf("\n");
+    }
+}
+
+void accessFile() {
+    char name[MAX_FILENAME];
+    int i, j;
+
+    printf("Enter file name to access: ");
+    scanf("%s", name);
+
+    for (i = 0; i < fileCount; i++) {
+        if (strcmp(files[i].name, name) == 0) {
+            printf("Accessing file '%s' sequentially:\n", name);
+            for (j = 0; j < files[i].length; j++) {
+                printf("Reading block %d...\n", files[i].startBlock + j);
+            }
+            return;
+        }
+    }
+    printf("File not found.\n");
+}
+
+int main() {
+    int choice;
+
+    while (1) {
+        printf("\n--- Sequential File Allocation ---\n");
+        printf("1. Create File\n2. Display Files\n3. Access File\n4. Exit\nEnter choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1: createFile(); break;
+            case 2: displayFiles(); break;
+            case 3: accessFile(); break;
+            case 4: exit(0);
+            default: printf("Invalid choice.\n");
+        }
+    }
+
+    return 0;
+}
